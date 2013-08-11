@@ -787,6 +787,11 @@ Must be used in conjunction with web-mode-enable-block-face."
 (defvar web-mode-smarty-end-control-regexp "{\\(/\\|else\\)" "")
 (defvar web-mode-velocity-end-control-regexp "#\\(end\\|else\\)" "")
 
+(defvar web-mode-chameleon-control-regexp
+  "</?\\([[:alpha:]]+:[[:alpha:]]+\\)"
+  "Chameleon control regexp.") ; bogus
+(defvar web-mode-chameleon-end-control-regexp "}" "") ; bogus
+
 (defvar web-mode-comment-keywords
   (regexp-opt
    (append web-mode-extra-comment-keywords
@@ -3381,6 +3386,14 @@ Must be used in conjunction with web-mode-enable-block-face."
             )
           )
 
+         ((string= web-mode-engine "chameleon") ; bogus
+          (setq ctrl (match-string-no-properties 2))
+          (if (member ctrl '("else" "elseif" "elif"))
+              (setq ctrl nil)
+            (setq state (not (string= "end" (match-string-no-properties 1))))
+            )
+          )
+
          );cond
 
         );when
@@ -4949,6 +4962,44 @@ Must be used in conjunction with web-mode-enable-block-face."
       )
     (web-mode-block-beginning)
     ))
+
+(defun web-mode-match-chameleon-block ()
+  "Fetch chameleon block."
+  (let (regexp)
+    (looking-at web-mode-jsp-control-regexp)
+    (setq regexp (concat "<\\(/?" (match-string-no-properties 1) "\\)\\>"))
+    (if (char-equal ?\/ (aref (match-string-no-properties 0) 1))
+        (web-mode-fetch-opening-chameleon-block regexp)
+      (web-mode-fetch-closing-chameleon-block regexp))
+    t)) ;bogus, copied from jsp
+
+(defun web-mode-fetch-opening-chameleon-block (regexp)
+  "Fetch chameleon opening block."
+  (let ((counter 1))
+    (while (and (> counter 0) (web-mode-rsb regexp nil t))
+      (cond
+       ((char-equal ?\/ (aref (match-string-no-properties 1) 0))
+        (setq counter (1+ counter)))
+       (t
+        (setq counter (1- counter)))
+       )
+      )
+    )) ; bogus, copied from jsp
+
+(defun web-mode-fetch-closing-chameleon-block (regexp)
+  "Fetch chameleon closing block."
+  (let ((counter 1))
+    (web-mode-block-end)
+    (while (and (> counter 0) (web-mode-rsf regexp nil t))
+      (cond
+       ((char-equal ?\/ (aref (match-string-no-properties 1) 0))
+        (setq counter (1- counter)))
+       (t
+        (setq counter (1+ counter)))
+       )
+      )
+    (web-mode-block-beginning)
+    )) ; bogus, copied from jsp
 
 (defun web-mode-element-close ()
   "Close HTML element."
