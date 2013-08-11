@@ -462,7 +462,8 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("aspx"       . ("aspx"))
     ("asp"        . ("asp"))
     ("razor"      . ("play" "play2"))
-    ("ctemplate"  . ("mustache" "handlebars" "hapax" "ngtemplate" "ember")))
+    ("ctemplate"  . ("mustache" "handlebars" "hapax" "ngtemplate" "ember"))
+    ("chameleon"  . ("pt" "zpt")))
   "Engine name aliases")
 
 (defvar web-mode-content-types
@@ -489,7 +490,8 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("python"     . "\\.pml\\'")
     ("razor"      . "play\\|\\.scala\\.\\|\\.cshtml\\'\\|\\.vbhtml\\'")
     ("smarty"     . "\\.tpl\\'")
-    ("velocity"   . "\\.\\(vsl\\|vtl\\|vm\\)\\'"))
+    ("velocity"   . "\\.\\(vsl\\|vtl\\|vm\\)\\'")
+    ("chameleon"   . "\\.\\(pt\\|zpt\\)\\'"))
   "engine extensions")
 
 (defvar web-mode-engine-block-regexps
@@ -506,7 +508,8 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("python"     . "<\\?")
     ("razor"      . "@.")
     ("smarty"     . "{[[:alpha:]#$/*\"]")
-    ("velocity"   . "^[ \t]*#[[:alpha:]#*]\\|$[[:alpha:]!{]"))
+    ("velocity"   . "^[ \t]*#[[:alpha:]#*]\\|$[[:alpha:]!{]")
+    ("chameleon"  . "[$]{\\|<\\?python"))
   "engine blocks")
 
 (defvar web-mode-smart-quotes
@@ -572,6 +575,7 @@ Must be used in conjunction with web-mode-enable-block-face."
    '("{{ "  " }}"      "}}"    0)
    '("{% "  " %}"      "%}"    0)
    '("{# "  " #}"      "#}"    0)
+   '("${"   " }"       "}"     0)
    )
   "Auto-Pairs")
 
@@ -1630,6 +1634,13 @@ Must be used in conjunction with web-mode-enable-block-face."
             (setq closing-string "?>"))
           );python
 
+         ((string= web-mode-engine "chameleon")
+          (cond
+           ((string= sub2 "${")
+            (setq closing-string "}"))
+           )
+          );chameleon
+
          );cond
 
         (when closing-string
@@ -1935,6 +1946,16 @@ Must be used in conjunction with web-mode-enable-block-face."
         )
        )
       );smarty
+
+     ((string= web-mode-engine "chameleon")
+      (cond
+       ((string= sub2 "${")
+        (setq regexp "\"\\|'"
+              props '(face nil)
+              keywords web-mode-uel-font-lock-keywords))
+        )
+        ;; (setq props '(block-token comment face web-mode-comment-face))
+      );chameleon
 
      )
 
@@ -3157,7 +3178,7 @@ Must be used in conjunction with web-mode-enable-block-face."
           (setq offset (1+ offset)))
         );case comment
 
-       ((member language '("php" "jsp" "asp" "aspx" "javascript" "code" "python" "erb" "freemarker"))
+       ((member language '("php" "jsp" "asp" "aspx" "javascript" "code" "python" "erb" "freemarker" "chameleon"))
 
         (cond
 
